@@ -8,7 +8,7 @@
             <div class="row">
                 <img src='/media/{{product.image}}' width="233px" height="400px">
             </div>
-            <div class="row mt-3"">
+            <div class="row mt-3">
                 <button  class="btn btn-primary col mx-3">Add to card</button>
                 <button  class="btn btn-primary col ">Buy</button>
             </div>
@@ -25,49 +25,49 @@
 {% endblock %}
 {% block js %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    console.log('working');
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("working");
 
-    // Check if localStorage has a cart
-    let cart = localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : {};
+    let cart = localStorage.getItem("cart") ? JSON.parse(localStorage.getItem("cart")) : {};
 
-    // Function to update cart count in the UI
     function updateCartCount() {
-        let cartElement = document.getElementById('cart');
+        let cartElement = document.getElementById("cart");
         if (cartElement) {
-            cartElement.innerHTML = Object.values(cart).reduce((a, b) => a + b, 0);
+            cartElement.innerHTML = Object.keys(cart).length;
         }
     }
 
-    updateCartCount(); // Update cart count on page load
+    updateCartCount(); // cart count refresh on page load
 
-    // Add event listener to all elements with class 'cart'
-    document.querySelectorAll('.cart').forEach(button => {
-        button.addEventListener('click', function() {
-            console.log('clicked');
-            let idstr = this.id.toString();
-            console.log('Clicked ID:', idstr);
+    document.querySelectorAll(".cart").forEach(button => {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            let id = this.id.replace("pr", ""); // Extract product ID
 
-            // Increase the item count in the cart
-            cart[idstr] = (cart[idstr] || 0) + 1;
-            console.log('Updated Cart:', cart);
+            let nameElement = document.getElementById("namepr" + id);
+            if (!nameElement) {
+                console.error("Error: Product name element not found for ID:", id);
+                return;
+            }
 
-            // Save cart to localStorage
-            localStorage.setItem('cart', JSON.stringify(cart));
+            let name = nameElement.innerText;
+            let imgElement = this.closest(".card").querySelector("img");
+            let imgSrc = imgElement ? imgElement.src : "";
 
-            // Update cart count in the UI
-            updateCartCount();
+            if (!(id in cart)) {
+                cart[id] = {
+                    name: name,
+                    img: imgSrc,
+                    qty: 1
+                };
+                localStorage.setItem("cart", JSON.stringify(cart));
+                updateCartCount();
+                alert(`${name} added to cart!`);
+            } else {
+                alert("This product is already in the cart!");
+            }
         });
     });
 });
-
-     let popcart = document.getElementById("popcart");
-    let popover = new bootstrap.Popover(popcart, {
-        html: true,
-        content: function () {
-            return `<h5>Cart for your items in my shopping cart</h5>`;
-        }
-    });
 </script>
 {% endblock %}
-

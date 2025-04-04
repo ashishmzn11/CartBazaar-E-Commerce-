@@ -1,3 +1,4 @@
+
 {% extends 'shop/basic.html' %}
 {% block css %}
           .col-md-3
@@ -45,7 +46,7 @@ padding-top:222px;
 <div class="container">
     <!--Slideshow starts here -->
     {% for product,range,nSlides in allProds %}
-   <h5 class="my-4">Flash Sale On {{product.0.category}} - Recommended Items</h5>
+   <h5 class="my-4" >Flash Sale On {{product.0.category}} - Recommended Items</h5>
     <div class="row">
 <div id="demo{{forloop.counter}}" class=" col carousel slide my-3" data-ride="carousel">
     <ul class="carousel-indicators">
@@ -67,10 +68,16 @@ padding-top:222px;
           <div class="card" style="width: 18rem;">
             <img src='/media/{{i.image}}' class="card-img-top" alt="...">
             <div class="card-body">
-              <h5 class="card-title">{{i.product_name}}</h5>
+              <h5 class="card-title" id="namepr{{i.product_id}}">{{i.product_name}}</h5>
+
+<!--                <h5 class="card-title" id="namepr{{i.id}}">{{i.product_name}}</h5>-->
               <p class="card-text">{{i.product_des}}</p>
-              <button id="pr{{i.id}}" class="btn btn-primary cart">Add To Cart</button>
-               <a href="/shop/prodview/{{i.product_id }}"> <button id="qv{{i.id}}" class="btn btn-primary cart">QuickView</button></a>
+             <button id="pr{{i.product_id}}" class="btn btn-primary cart">Add To Cart</button>
+
+<a href="/shop/prodview/{{i.product_id}}">
+    <button id="qv{{i.id}}" class="btn btn-primary quick-view">QuickView</button>
+</a>
+
             </div>
           </div>
         </div>
@@ -101,48 +108,50 @@ padding-top:222px;
 <!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
 {% block js %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    console.log('working');
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("working");
 
-    // Check if localStorage has a cart
-    let cart = localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : {};
+    let cart = localStorage.getItem("cart") ? JSON.parse(localStorage.getItem("cart")) : {};
 
-    // Function to update cart count in the UI
     function updateCartCount() {
-        let cartElement = document.getElementById('cart');
+        let cartElement = document.getElementById("cart");
         if (cartElement) {
-            cartElement.innerHTML = Object.values(cart).reduce((a, b) => a + b, 0);
+            cartElement.innerHTML = Object.keys(cart).length;
         }
     }
 
-    updateCartCount(); // Update cart count on page load
+    updateCartCount(); // cart count refresh on page load
 
-    // Add event listener to all elements with class 'cart'
-    document.querySelectorAll('.cart').forEach(button => {
-        button.addEventListener('click', function() {
-            console.log('clicked');
-            let idstr = this.id.toString();
-            console.log('Clicked ID:', idstr);
+    document.querySelectorAll(".cart").forEach(button => {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            let id = this.id.replace("pr", ""); // Extract product ID
 
-            // Increase the item count in the cart
-            cart[idstr] = (cart[idstr] || 0) + 1;
-            console.log('Updated Cart:', cart);
+            let nameElement = document.getElementById("namepr" + id);
+            if (!nameElement) {
+                console.error("Error: Product name element not found for ID:", id);
+                return;
+            }
 
-            // Save cart to localStorage
-            localStorage.setItem('cart', JSON.stringify(cart));
+            let name = nameElement.innerText;
+            let imgElement = this.closest(".card").querySelector("img");
+            let imgSrc = imgElement ? imgElement.src : "";
 
-            // Update cart count in the UI
-            updateCartCount();
+            if (!(id in cart)) {
+                cart[id] = {
+                    name: name,
+                    img: imgSrc,
+                    qty: 1
+                };
+                localStorage.setItem("cart", JSON.stringify(cart));
+                updateCartCount();
+                alert(`${name} added to cart!`);
+            } else {
+                alert("This product is already in the cart!");
+            }
         });
     });
 });
-
-     let popcart = document.getElementById("popcart");
-    let popover = new bootstrap.Popover(popcart, {
-        html: true,
-        content: function () {
-            return `<h5>Cart for your items in my shopping cart</h5>`;
-        }
-    });
 </script>
 {% endblock %}
+
