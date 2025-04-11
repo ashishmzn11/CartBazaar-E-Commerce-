@@ -1,4 +1,196 @@
+{% extends 'shop/basic.html' %}
+{% block body %}
 
-{% extends 'shop/basic.html'%}
-{% block title%}about{% endblock%}
-{% block body%}about{% endblock%}
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-primary p-3">
+    <a class="navbar-brand text-white" href="#">CartBazzar <span class="text-warning">Explore Plus</span></a>
+    <div class="mx-auto w-50">
+        <input class="form-control" type="text" placeholder="Search for products, brands and more">
+    </div>
+    <div>
+        <a href="#" class="text-white mx-3">My Account</a>
+    </div>
+</nav>
+
+<div class="container my-5">
+    <h2 class="mb-4">Your Shopping Cart</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div id="cart-items" class="cart-list">
+                <!-- Cart items will be injected here -->
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h4>PRICE DETAILS</h4>
+                <p>Price (<span id="item-count">0</span> items): ₹<span id="subtotal">0</span></p>
+                <p>Discount: <span class="text-success">- ₹<span id="discount">0</span></span></p>
+                <p>Delivery Charges: ₹<span id="delivery">49</span></p>
+                <hr>
+                <h5>Total Amount: ₹<span id="total-amount">0</span></h5>
+                <p class="text-success">You will save ₹<span id="savings">0</span> on this order</p>
+
+                <div class="card p-4 shadow rounded-3">
+                    <h3 class="mb-4 text-center">Step 2 - Enter Address & Other Details</h3>
+                    <form method="POST" action="/shop/checkout/">
+                        {% csrf_token %}
+                        <input type="hidden" name="itemsJson" id="itemsJson">
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address1" class="form-label">Address</label>
+                            <input type="text" class="form-control" id="address1" name="address1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address2" class="form-label">Address Line 2</label>
+                            <input type="text" class="form-control" id="address2" name="address2">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="text" class="form-control" id="phone" name="phone" required>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="state" class="form-label">State</label>
+                                <input type="text" class="form-control" id="state" name="state" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="zip_code" class="form-label">Zip</label>
+                                <input type="text" class="form-control" id="zip_code" name="zip_code" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                           <!-- Example: place order button -->
+<button id="place-order-btn">Place Order</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let cart = localStorage.getItem("cart") ? JSON.parse(localStorage.getItem("cart")) : {};
+    let cartContainer = document.getElementById("cart-items");
+    let subtotalEl = document.getElementById("subtotal");
+    let totalAmountEl = document.getElementById("total-amount");
+    let discountEl = document.getElementById("discount");
+    let savingsEl = document.getElementById("savings");
+    let itemCountEl = document.getElementById("item-count");
+
+    function renderCart() {
+        cartContainer.innerHTML = "";
+        let subtotal = 0;
+        let discount = 0;
+        let totalItems = 0;
+
+        if (Object.keys(cart).length === 0) {
+            cartContainer.innerHTML = `<div class="alert alert-info text-center">
+                🛒 Your cart is empty. Please add some products.
+            </div>`;
+        }
+
+        Object.keys(cart).forEach(id => {
+            let item = cart[id];
+            let itemTotal = item.price * item.qty;
+            let itemDiscount = (item.originalPrice - item.price) * item.qty;
+            subtotal += itemTotal;
+            discount += itemDiscount;
+            totalItems += item.qty;
+
+            let cartItem = `<div class="d-flex border p-3 mb-2">
+                <img src="${item.img}" width="80" height="80" class="me-3">
+                <div class="flex-grow-1">
+                    <h5>${item.name}</h5>
+                    <p>₹<span>${item.price}</span> <del class="text-muted">₹${item.originalPrice}</del></p>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-sm btn-secondary" onclick="updateQty('${id}', -1)">-</button>
+                        <span class="mx-2">${item.qty}</span>
+                        <button class="btn btn-sm btn-secondary" onclick="updateQty('${id}', 1)">+</button>
+                    </div>
+                    <button class="btn btn-link text-danger" onclick="removeItem('${id}')">Remove</button>
+                </div>
+                <h5 class="text-end">₹${itemTotal}</h5>
+            </div>`;
+
+            cartContainer.innerHTML += cartItem;
+        });
+
+        subtotalEl.innerText = subtotal;
+        discountEl.innerText = discount;
+        totalAmountEl.innerText = subtotal + (totalItems > 0 ? 49 : 0);
+        savingsEl.innerText = discount;
+        itemCountEl.innerText = totalItems;
+    }
+
+    window.updateQty = function (id, change) {
+        if (cart[id].qty + change > 0) {
+            cart[id].qty += change;
+        } else {
+            delete cart[id];
+        }
+        localStorage.setItem("cart", JSON.stringify(cart));
+        renderCart();
+    };
+
+    window.removeItem = function (id) {
+        delete cart[id];
+        localStorage.setItem("cart", JSON.stringify(cart));
+        renderCart();
+    };
+
+    window.buyNow = function () {
+        if (Object.keys(cart).length === 0) {
+            alert("Your cart is empty.");
+            return;
+        }
+
+        document.getElementById("itemsJson").value = JSON.stringify(cart);
+        document.querySelector('form').submit();
+        localStorage.removeItem("cart");
+    };
+
+    renderCart();
+
+
+});
+document.getElementById("place-order-btn").addEventListener("click", function () {
+    // 1. Get cart from localStorage
+    let cart = JSON.parse(localStorage.getItem("cart")) || {};
+
+    // 2. Send it to Django (optional: if using form or AJAX)
+    // You can do it using hidden form input if not using AJAX
+
+    // 3. Clear localStorage cart
+    localStorage.removeItem("cart");
+
+    // 4. Redirect to thank you page or reload
+<!--    window.location.href = "/shop/thankyou"; // ya reload bhi kar sakte ho-->
+});
+
+</script>
+{% endblock %}

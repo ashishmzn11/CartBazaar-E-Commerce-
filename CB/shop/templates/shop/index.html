@@ -103,6 +103,19 @@ padding-top:222px;
         </div>
 {% endfor %}
 </div>
+document.addEventListener("DOMContentLoaded", function () {
+    // Cart clear after placing order
+    localStorage.removeItem("cart");
+
+    // Optional: Update cart count to 0
+    let cartElement = document.getElementById("cart");
+    if (cartElement) {
+        cartElement.innerText = "0";
+    }
+
+    // Optional: Show confirmation
+    alert("Order placed successfully! Cart has been cleared.");
+});
  {% endblock %}
 
 <!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
@@ -154,4 +167,3 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 {% endblock %}
-

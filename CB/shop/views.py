@@ -4,7 +4,9 @@ from django.shortcuts import render, get_object_or_404
 # Create your views here.
 from .models import Product
 from .models import Contact
+from .models import Orders
 from math import ceil
+from datetime import datetime
 def index(request):
     # products = Product.objects.all()
     # print(products)
@@ -44,5 +46,34 @@ def productview(request, id):
     product = get_object_or_404(Product, product_id =id) # Change id to product_id
     print(product)
     return render(request, "shop/prodview.html", {"product": product})
+# def checkout(request):
+#     return render(request,'shop/checkout.html')
+
 def checkout(request):
-    return render(request,'shop/checkout.html')
+    if request.method == "POST":
+        items_json = request.POST.get('itemsJson', '')
+        name = request.POST.get('name', '')
+        email = request.POST.get('email', '')
+        address1 = request.POST.get('address1', '')
+        address2 = request.POST.get('address2', '')
+        phone = request.POST.get('phone', '')
+        city = request.POST.get('city', '')
+        state = request.POST.get('state', '')
+        zip_code = request.POST.get('zip_code', '')
+
+        order = Orders(
+            items_json=items_json,
+            name=name,
+            email=email,
+            address1=address1,
+            address2=address2,
+            phone=phone,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            order_date = datetime.now()
+        )
+        order.save()
+        return render(request, 'shop/checkout.html', {'thank': True, 'id': order.id})
+
+    return render(request, 'shop/checkout.html')

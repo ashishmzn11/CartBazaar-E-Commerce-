@@ -1,4 +1,7 @@
 from django.db import models
+from datetime import datetime
+# from django.db import models
+# from .models import Order
 
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)  # Mark it as primary!
@@ -22,3 +25,21 @@ class Contact(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Orders(models.Model):
+    items_json = models.TextField()
+    name = models.CharField(max_length=90)
+    email = models.EmailField()
+    address1 = models.CharField(max_length=111)
+    address2 = models.CharField(max_length=111)
+    phone = models.CharField(max_length=15)
+    city = models.CharField(max_length=50)
+    state = models.CharField(max_length=50)
+    zip_code = models.CharField(max_length=10)
+    order_date = models.DateTimeField(auto_now_add=True)
+    # order_date = models.DateTimeField(auto_now_add=True)
+    # timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Order {self.id} by {self.name}"
